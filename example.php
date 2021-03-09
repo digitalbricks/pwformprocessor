@@ -31,50 +31,50 @@ $fp->setFields(array(
         'fallback' => false
     ),
     'ob234xsd_first' => array(
-        'label'=> 'Vorname',
+        'label'=> 'First name',
         'sanitizer' => 'text',
         'required' => true,
         'fallback' => false
     ),
     'ob234xsd_stree' => array(
-        'label'=> 'Straße',
+        'label'=> 'Street',
         'sanitizer' => 'text',
         'required' => true,
         'fallback' => false
     ),
     'ob234xsd_num' => array(
-        'label'=> 'Hausnummer',
+        'label'=> 'Number',
         'sanitizer' => 'text',
         'required' => true,
         'fallback' => false
     ),
     'ob234xsd_zip' => array(
-        'label'=> 'PLZ',
+        'label'=> 'ZIP',
         'sanitizer' => 'text',
         'required' => true,
         'fallback' => false
     ),
     'ob234xsd_city' => array(
-        'label'=> 'Stadt',
+        'label'=> 'City',
         'sanitizer' => 'text',
         'required' => true,
         'fallback' => false
     ),
     'ob234xsd_mail' => array(
-        'label'=> 'E-Mail-Adresse',
+        'label'=> 'Email adress',
         'sanitizer' => 'email',
         'required' => true,
         'fallback' => false
     ),
     'ob234xsd_phon' => array(
-        'label'=> 'Telefonnummer',
+        'label'=> 'Phone number',
         'sanitizer' => 'text',
         'required' => false,
         'fallback' => false
     ),
     'ob234xsd_notes' => array(
-        'label'=> 'Bemerkungen',
-        'sanitizer' => 'text',
+        'label'=> 'Notes',
+        'sanitizer' => 'textarea',
         'required' => false,
         'fallback' => false
     ),
