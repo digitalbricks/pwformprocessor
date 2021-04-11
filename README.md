@@ -67,6 +67,15 @@ $fp->setFields(array(
     )
 ));
 ```
+#### Available `htmloptions` for field configuration
+You may define addition options for the **HTML part** of the email. These options has to be separated with a space and are processed in the order they are define – ecxept `nohtmlentities`.
+
+| Setting          | Notes                                                                  |
+|------------------|------------------------------------------------------------------------|
+| `nl2br`          | Applies PHP `nl2br()`and is always helpfull when processing textareas  |
+| `fullwidth`      | If set, the field label and value are **not** splitted into two table rows – usefull e.g. for contact form message  |
+| `nohtmlentities` | Does **not** apply `htmlentities()` to the field **value**. Please note, that ProcessWire sanitizer removes HTML in the most cases, so this setting makes only sense if no `sanitizer` defined |
+
 
 ### Form Processing
 Currently there are two methods for processing the form: The first one checks the fields, sanitize them and subsequently send them in the given oder by mail:

@@ -234,8 +234,6 @@ class PwFormprocessor{
             if(array_key_exists('htmloptions',$config)){
                 $this->sanitizedFields[$fieldname]['htmloptions'] = $config['htmloptions'];
             }
-
-
         }
     }
 
@@ -248,16 +246,22 @@ class PwFormprocessor{
     }
 
 
+    /**
+     * @param array $data
+     * @return string
+     */
     private function prepareHtmlValue(array $data){
         if(array_key_exists('htmloptions',$data)){
             $options = explode(" ", $data['htmloptions']);
+
             // only apply htmlentities() if NO 'nohtmlentities' option set
+            // NOTE: htmlentities() is applied via ProcessWire sanitizer in the most cases,
+            // so this option only works with no sanitizer specified in field settings
             if(!in_array('nohtmlentities',$options)){
                 $value = htmlentities($data['value']);
             } else {
                 $value = $data['value'];
             }
-
 
             // process options in order of configuration
             foreach ($options as $option){
@@ -270,12 +274,40 @@ class PwFormprocessor{
 
             return $value;
 
-
-
         } else {
             return htmlentities($data['value']);
         }
     }
+
+
+    /**
+     * @param array $data
+     * @return string
+     */
+    private function prepareHtmlRow(array $data){
+        $row = "";
+        // only add data which has a label defined
+        if(array_key_exists('label',$data) AND $data['label']){
+
+            // check if we have 'fullwidth' set in 'htmloptions'
+            if(array_key_exists('htmloptions',$data) AND strpos($data['htmloptions'],'fullwidth')){
+                $row = "<tr>\n
+                                <td colspan='2'>
+                                <strong>".htmlentities($data['label'])."</strong><br><br>
+                                {$this->prepareHtmlValue($data)}
+                                </td>
+                            </tr>";
+            } else {
+                $row = "<tr>\n
+                                <th>".htmlentities($data['label'])."</th>
+                                <td>{$this->prepareHtmlValue($data)}</td>
+                            </tr>";
+            }
+        }
+
+        return $row;
+    }
+
 
     /**
      * @param array $sanitizedfields
@@ -288,17 +320,7 @@ class PwFormprocessor{
 
         $message_rows = "";
         foreach ($sanitizedfields as $field => $data){
-            $value = $this->prepareHtmlValue($data);
-
-
-            // only add data which has a label defined
-            if(array_key_exists('label',$data) AND $data['label']){
-                $message_rows.="<tr>\n
-                                <th>".htmlentities($data['label'])."</th>
-                                <td>{$value}</td>
-                            </tr>";
-            }
-
+            $message_rows.=$this->prepareHtmlRow($data);
         }
 
         $message_header = "<style>
