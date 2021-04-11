@@ -43,7 +43,7 @@ $fp->setFields(array(
         'required' => true,     // true if this is a mandatory field
         'fallback' => 0         // a fallback value if field is empty (only usefull for non-mandatory fields)
     ),
-    'ob234xsd_nam' => array(   // Note: some fieldnames are obfuscated with a random prefix in this example
+    'ob234xsd_nam' => array(    // Note: some fieldnames are obfuscated with a random prefix in this example
         'label'=> 'Name',
         'sanitizer' => 'text',
         'required' => true,
@@ -59,9 +59,10 @@ $fp->setFields(array(
         'label'=> 'Bemerkungen',
         'sanitizer' => 'textarea',
         'required' => false,
-        'fallback' => false
+        'fallback' => false,
+        'htmloptions' => 'nl2br' // option for HTML value processing (optional)
     ),
-    'privacy' => array(             // the "I read the privacy police" checkbox, mandatory but does not show in email because of missing label
+    'privacy' => array(          // the "I read the privacy police" checkbox, mandatory but does not show in email because of missing label
         'required' => true
     )
 ));

@@ -229,6 +229,13 @@ class PwFormprocessor{
             } else {
                 $this->sanitizedFields[$fieldname]['label'] = null;
             }
+
+            // attach given htmloptions if any (processed later while preparing html email)
+            if(array_key_exists('htmloptions',$config)){
+                $this->sanitizedFields[$fieldname]['htmloptions'] = $config['htmloptions'];
+            }
+
+
         }
     }
 
@@ -238,6 +245,36 @@ class PwFormprocessor{
     private function getSanitizedFields()
     {
         return $this->sanitizedFields;
+    }
+
+
+    private function prepareHtmlValue(array $data){
+        if(array_key_exists('htmloptions',$data)){
+            $options = explode(" ", $data['htmloptions']);
+            // only apply htmlentities() if NO 'nohtmlentities' option set
+            if(!in_array('nohtmlentities',$options)){
+                $value = htmlentities($data['value']);
+            } else {
+                $value = $data['value'];
+            }
+
+
+            // process options in order of configuration
+            foreach ($options as $option){
+                switch($option){
+                    case 'nl2br':
+                        $value = nl2br($value);
+                        break;
+                }
+            }
+
+            return $value;
+
+
+
+        } else {
+            return htmlentities($data['value']);
+        }
     }
 
     /**
@@ -251,11 +288,14 @@ class PwFormprocessor{
 
         $message_rows = "";
         foreach ($sanitizedfields as $field => $data){
+            $value = $this->prepareHtmlValue($data);
+
+
             // only add data which has a label defined
             if(array_key_exists('label',$data) AND $data['label']){
                 $message_rows.="<tr>\n
                                 <th>".htmlentities($data['label'])."</th>
-                                <td>".htmlentities($data['value'])."</td>
+                                <td>{$value}</td>
                             </tr>";
             }
 
