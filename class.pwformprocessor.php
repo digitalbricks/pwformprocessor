@@ -4,7 +4,7 @@
  * Class PwFormprocessor
  */
 class PwFormprocessor{
-    public $version = "0.1";
+    public $version = "0.2";
     private $wire = null;
     private $fields = null;
     private $sanitizedFields = null;
@@ -31,11 +31,11 @@ class PwFormprocessor{
 
     /**
      * @param array $fields
-     *              [fieldName]         name of the field
-     *                  ['label']       human readable label of the field (for email output)
-     *                  ['sanitizer']   name of the ProcessWire sanitizer to use
-     *                  ['required']    true | false
-     *                  ['fallback']    fallback value if not set
+     *              [fieldName]     name of the field
+     *              ['label']       human readable label of the field (for email output)
+     *              ['sanitizer']   name of the ProcessWire sanitizer to use
+     *              ['required']    true | false
+     *              ['fallback']    fallback value if not set
      */
     public function setFields(array $fields){
         $this->fields = $fields;
@@ -271,7 +271,6 @@ class PwFormprocessor{
                         break;
                 }
             }
-
             return $value;
 
         } else {
@@ -286,21 +285,22 @@ class PwFormprocessor{
      */
     private function prepareHtmlRow(array $data){
         $row = "";
+        $value = $this->prepareHtmlValue($data);
         // only add data which has a label defined
-        if(array_key_exists('label',$data) AND $data['label']){
+        if(array_key_exists('label',$data) AND $data['label'] AND $value!=""){
 
             // check if we have 'fullwidth' set in 'htmloptions'
             if(array_key_exists('htmloptions',$data) AND strpos($data['htmloptions'],'fullwidth')){
                 $row = "<tr>\n
                                 <td colspan='2'>
                                 <strong>".htmlentities($data['label'])."</strong><br><br>
-                                {$this->prepareHtmlValue($data)}
+                                {$value}
                                 </td>
                             </tr>";
             } else {
                 $row = "<tr>\n
                                 <th>".htmlentities($data['label'])."</th>
-                                <td>{$this->prepareHtmlValue($data)}</td>
+                                <td>{$value}</td>
                             </tr>";
             }
         }
