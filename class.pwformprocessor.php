@@ -4,13 +4,14 @@
  * Class PwFormprocessor
  */
 class PwFormprocessor{
-    public $version = "0.2";
+    public $version = "0.3";
     private $wire = null;
     private $fields = null;
     private $sanitizedFields = null;
     private $honeypotfields = null;
     private $mailreceiver = null; // specify CSV string or array for multiple addresses
     private $mailsender = null;
+    private $mailreplyto = null;
     private $mailsubject = null;
     private $mailsendername = null;
     private $timestampduration = 86400;
@@ -60,6 +61,13 @@ class PwFormprocessor{
      */
     public function setMailSender(string $sender){
         $this->mailsender = $sender;
+    }
+
+    /**
+     * @param string $sender
+     */
+    public function setMailReplyTo(string $replyto){
+        $this->mailreplyto = $replyto;
     }
 
     /**
@@ -399,6 +407,11 @@ class PwFormprocessor{
         }
         if($from){
             $m->from($from);
+        }
+
+        // replyTo
+        if($this->mailreplyto){
+            $m->replyTo($this->mailreplyto);
         }
 
 

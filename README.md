@@ -66,6 +66,12 @@ $fp->setFields(array(
         'required' => true
     )
 ));
+
+// OPTIONAL: set the replyTo mail header (available since v0.3)
+$user_mail = $wire->input->post('ob234xsd_mail', 'email');
+if($user_mail AND $user_mail!=""){
+    $fp->setMailReplyTo($user_mail);
+}
 ```
 #### Available `htmloptions` for field configuration
 You may define addition options for the **HTML part** of the email. These options has to be separated with a space and are processed in the order they are define – ecxept `nohtmlentities`.

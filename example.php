@@ -90,7 +90,15 @@ $fp->setFields(array(
  */ 
 //$processResult = $fp->processFormAndSend();
 
-
+/**
+ * OPTIONAL: 
+ * Set ReplyTo mail header so that the receiver of the mail
+ * can easily answer by using the reply function of the mail client
+ */
+$user_mail = $wire->input->post('ob234xsd_mail', 'email');
+if($user_mail AND $user_mail!=""){
+    $fp->setMailReplyTo($user_mail);
+}
 
 /**
  * The more complex multistep method wich gives you the change to merge some
