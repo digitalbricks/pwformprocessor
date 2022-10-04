@@ -4,7 +4,7 @@
  * Class PwFormprocessor
  */
 class PwFormprocessor{
-    public $version = "0.3";
+    public $version = "0.4";
     private $wire = null;
     private $fields = null;
     private $sanitizedFields = null;
@@ -16,6 +16,7 @@ class PwFormprocessor{
     private $mailsendername = null;
     private $timestampduration = 86400;
     private $timestampfield = null;
+    private $mulivalueseperator = " | ";
 
     /**
      * PwFormprocessor constructor.
@@ -96,6 +97,13 @@ class PwFormprocessor{
      */
     public function setTimestampfield(string $timestampfield){
         $this->timestampfield = $timestampfield;
+    }
+
+    /**
+     * @param string $mulivalueseperator
+     */
+    public function setMulivalueseperator(string $mulivalueseperator){
+        $this->mulivalueseperator = $mulivalueseperator;
     }
 
     /**
@@ -224,6 +232,11 @@ class PwFormprocessor{
         foreach ($this->fields as $fieldname => $config){
             $value = $this->wire->input->post($fieldname);
             if(array_key_exists('sanitizer',$config) AND method_exists($this->wire->sanitizer, $config['sanitizer'])){
+                // check if the current field value is an array (multi value fields such as checkboxes and multi selects)
+                if(is_array($value)){
+                    $value = implode($this->mulivalueseperator,$value);
+                }
+                
                 $value = $this->wire->sanitizer->{$config['sanitizer']}($value);
             }
             // if sanitizer results in empty string, we check if we have a fallback value set

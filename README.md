@@ -72,6 +72,9 @@ $user_mail = $wire->input->post('ob234xsd_mail', 'email');
 if($user_mail AND $user_mail!=""){
     $fp->setMailReplyTo($user_mail);
 }
+
+// OPTIONAL: change seperator string for multi value fields (default is " | " – available since v0.4)
+$fp->setMulivalueseperator(" ," );
 ```
 #### Available `htmloptions` for field configuration
 You may define addition options for the **HTML part** of the email. These options has to be separated with a space and are processed in the order they are define – ecxept `nohtmlentities`.

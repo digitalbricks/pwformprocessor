@@ -83,12 +83,6 @@ $fp->setFields(array(
     )
 ));
 
-/**
- *  The simple method (commented out in this example).
- *  It just take all specified fields and throw them in an email
- *  if all validation checks where passed.
- */ 
-//$processResult = $fp->processFormAndSend();
 
 /**
  * OPTIONAL: 
@@ -99,6 +93,25 @@ $user_mail = $wire->input->post('ob234xsd_mail', 'email');
 if($user_mail AND $user_mail!=""){
     $fp->setMailReplyTo($user_mail);
 }
+
+/**
+ * OPTIONAL:
+ * Set seperator for multi value fields, such as checkboxes
+ * or multi selects. Default is " | " (pipe symbol).
+ */
+$fp->setMulivalueseperator(" ," );
+
+/**
+ *  The simple method (commented out in this example).
+ *  It just take all specified fields and throw them in an email
+ *  if all validation checks where passed.
+ */ 
+//$processResult = $fp->processFormAndSend();
+
+
+
+
+
 
 /**
  * The more complex multistep method wich gives you the change to merge some
@@ -114,6 +127,7 @@ if(array_key_exists('success',$processResult) AND $processResult['success'] == t
         echo "Your message was successfully submitted";
         exit;
     } else {
+        http_response_code(400);
         echo "Your message could not be delivered. Please contact us by phone.";
         exit;
     }
