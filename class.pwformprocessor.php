@@ -4,7 +4,7 @@
  * Class PwFormprocessor
  */
 class PwFormprocessor{
-    public $version = "0.4";
+    public $version = "0.5";
     private $wire = null;
     private $fields = null;
     private $sanitizedFields = null;
@@ -12,11 +12,13 @@ class PwFormprocessor{
     private $mailreceiver = null; // specify CSV string or array for multiple addresses
     private $mailsender = null;
     private $mailreplyto = null;
+    private $mailreplytofield = null;
     private $mailsubject = null;
     private $mailsendername = null;
     private $timestampduration = 86400;
     private $timestampfield = null;
     private $mulivalueseperator = " | ";
+    private $missingfields = array();
 
     /**
      * PwFormprocessor constructor.
@@ -38,6 +40,8 @@ class PwFormprocessor{
      *              ['sanitizer']   name of the ProcessWire sanitizer to use
      *              ['required']    true | false
      *              ['fallback']    fallback value if not set
+     *              ['htmloptions'] options for html output (e.g. 'nl2br' or 'fullwidth')
+     *              ['errortext']   error message if field is required but not set
      */
     public function setFields(array $fields){
         $this->fields = $fields;
@@ -69,6 +73,15 @@ class PwFormprocessor{
      */
     public function setMailReplyTo(string $replyto){
         $this->mailreplyto = $replyto;
+    }
+
+    /**
+     * @param string $mailreplytofield
+     * @return void
+     */
+    public function setMailReplyToField(string $mailreplytofield): void
+    {
+        $this->mailreplytofield = $mailreplytofield;
     }
 
     /**
@@ -130,7 +143,8 @@ class PwFormprocessor{
         if(!$this->checkReqiuredFields()){
             return array(
                 'success' => false,
-                'reason' => 'required'
+                'reason' => 'required',
+                'missingfields' => $this->getMissingFields($includeErrorTexts = true)
             );
         };
 
@@ -213,15 +227,21 @@ class PwFormprocessor{
                     if(array_key_exists('sanitizer',$config) AND method_exists($this->wire->sanitizer, $config['sanitizer'])){
                         // ... if sanitizer results in empty string we claim the field as not valid
                         if($this->wire->sanitizer->{$config['sanitizer']}($value) ==""){
-                            return false;
+                            $this->missingfields[] = $fieldname;
                         }
                     }
                 } else {
                     // if field is not in post ...
-                    return false;
+                    $this->missingfields[] = $fieldname;
                 }
             }
         }
+        // if we have missing fields, we return false
+        if(count($this->getMissingFields())){
+            return false;
+        }
+
+        // not exited yet, return true
         return true;
     }
 
@@ -236,7 +256,7 @@ class PwFormprocessor{
                 if(is_array($value)){
                     $value = implode($this->mulivalueseperator,$value);
                 }
-                
+
                 $value = $this->wire->sanitizer->{$config['sanitizer']}($value);
             }
             // if sanitizer results in empty string, we check if we have a fallback value set
@@ -393,6 +413,26 @@ class PwFormprocessor{
     }
 
     /**
+     * @return array
+     */
+    public function getMissingFields($includeErrorTexts = false){
+        if(!$includeErrorTexts){
+            return $this->missingfields;
+        }
+
+        // if $includeErrorTexts is true, we return an array with fieldnames as keys and error texts as values
+        $errorTexts = array();
+        foreach ($this->missingfields as $fieldname){
+            if(array_key_exists($fieldname,$this->fields)){
+                if(array_key_exists('errortext',$this->fields[$fieldname])){
+                    $errorTexts[$fieldname] = $this->fields[$fieldname]['errortext'];
+                }
+            }
+        }
+        return $errorTexts;
+    }
+
+    /**
      * @param array $sanitizedfields
      * @return bool
      */
@@ -422,7 +462,16 @@ class PwFormprocessor{
             $m->from($from);
         }
 
-        // replyTo
+        // check if we have a replyTo field set
+        if($this->mailreplytofield){
+            // get contents from post (if any), sanitize and set as replyTo
+            $replyTo = $this->wire->input->post($this->mailreplytofield, 'email');
+            if($replyTo){
+                $this->setMailReplyTo($replyTo);
+            }
+        }
+
+        // replyTo (set via setMailReplyTo() or setMailreplytofield())
         if($this->mailreplyto){
             $m->replyTo($this->mailreplyto);
         }
