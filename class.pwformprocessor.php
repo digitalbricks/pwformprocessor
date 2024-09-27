@@ -35,14 +35,26 @@ class PwFormprocessor{
     }
 
     /**
+     * Define your fields like this:
+     * <code>
+     * $fields = array(
+     *    'fieldname_from_post' => array(
+     *          'label' => 'Field Label',                                       // human readable label of the field (for email output)
+     *          'sanitizer' => 'text',                                          // ProcessWire sanitizer name
+     *          'required' => true,
+     *          'fallback' => 'fallback value if not set',                      // optional
+     *          'htmloptions' => 'nl2br fullwidth nohtmlentities',              // optional (one or more options separated by space)
+     *          'errortext' => 'error message if field is required but not set' // optional
+     *      ),
+     *      'customfield--custom_field_name' => array(                          // custom field has to be prefixed with "customfield--"
+     *           'label' => 'Field Label',                                      // NOTE: NO sanitizer applied, be careful!
+     *           'value' => 'Custom Field Value',
+     *           'htmloptions' => 'nl2br fullwidth nohtmlentities',             // optional (one or more options separated by space)
+     *       ),
+     * );
+     * </code>
+     *
      * @param array $fields
-     *              [fieldName]     name of the field
-     *              ['label']       human readable label of the field (for email output)
-     *              ['sanitizer']   name of the ProcessWire sanitizer to use
-     *              ['required']    true | false
-     *              ['fallback']    fallback value if not set
-     *              ['htmloptions'] options for html output (e.g. 'nl2br' or 'fullwidth')
-     *              ['errortext']   error message if field is required but not set
      */
     public function setFields(array $fields){
         $this->fields = $fields;
@@ -190,10 +202,18 @@ class PwFormprocessor{
                 );
             }
         } elseif(array_key_exists('reason',$processResult)){
-            return array(
+            $returndata = array(
                 'success' => false,
                 'reason' => $processResult['reason']
             );
+
+            // add missing fields if any, including error texts
+            $missingfields = $this->getMissingFields($includeErrorTexts = true);
+            if(count($missingfields)){
+                $returndata['missingfields'] = $missingfields;
+            }
+
+            return $returndata;
         }
         return array(
             'success' => false,

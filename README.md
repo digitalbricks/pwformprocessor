@@ -27,6 +27,9 @@ $fp->setMailReceiver('info@example.com');
 $fp->setMailSender('info@example.com');
 $fp->setMailSenderName('John Doe');
 $fp->setMailSubject('My Mail Subject');
+
+// set the field to be used as replyTo mail header (available since v0.5)
+$fp->setMailReplyToField('email');
 ```
 
 Now we can define the our fields:
@@ -41,37 +44,40 @@ $fp->setFields(array(
         'label'=> 'Amount',     // human readable label, will be used for email output (no laben = no output in email)
         'sanitizer' => 'int',   // name of the sanitizer method, see https://processwire.com/api/ref/sanitizer/
         'required' => true,     // true if this is a mandatory field
-        'fallback' => 0         // a fallback value if field is empty (only usefull for non-mandatory fields)
+        'fallback' => 0,        // a fallback value if field is empty (only usefull for 
+        'errortext' => 'Please specify amount.'
     ),
-    'ob234xsd_nam' => array(    // Note: some fieldnames are obfuscated with a random prefix in this example
+    'name' => array
         'label'=> 'Name',
         'sanitizer' => 'text',
         'required' => true,
-        'fallback' => false
+        'fallback' => false,
+        'errortext' => 'Please enter a name.'
     ),
-    'ob234xsd_mail' => array(
+    'email' => array(
         'label'=> 'E-Mail-Adresse',
         'sanitizer' => 'email',
         'required' => true,
         'fallback' => false
     ),
-    'ob234xsd_notes' => array(
+    'message' => array(
         'label'=> 'Bemerkungen',
         'sanitizer' => 'textarea',
         'required' => false,
         'fallback' => false,
-        'htmloptions' => 'nl2br' // option for HTML value processing (optional)
+        'htmloptions' => 'nl2br fullwidth' // option for HTML value processing (optional)
+    ),
+    'customfield--demo' => array( // custom field (since v0.5), NO sanitation applied, be careful!
+        'label'=> 'Custom field Demo',
+        'value' => 'You may use array keys with "customfield--" prefix to manually add information to the email that will be sent. ',
+        'htmloptions' => 'fullwidth nohtmlentities'
     ),
     'privacy' => array(          // the "I read the privacy police" checkbox, mandatory but does not show in email because of missing label
         'required' => true
     )
 ));
 
-// OPTIONAL: set the replyTo mail header (available since v0.3)
-$user_mail = $wire->input->post('ob234xsd_mail', 'email');
-if($user_mail AND $user_mail!=""){
-    $fp->setMailReplyTo($user_mail);
-}
+
 
 // OPTIONAL: change seperator string for multi value fields (default is " | " – available since v0.4)
 $fp->setMulivalueseperator(" ," );
@@ -93,38 +99,100 @@ Currently there are two methods for processing the form: The first one checks th
 $processResult = $fp->processFormAndSend();
 ```
 
-The method `processFormAndSend()` returns an array with the keys `success`(`true` if mail was sent, `false` if there was an error) and `reason` (holds the reason for failure – such as `mailnotsent`, `honeypot`, `required`, `timestamp`). So we may check for this return values and generate corresponding error- or success-messages for the user.
+The method `processFormAndSend()` returns an array with the keys `success` (`true` if mail was sent, `false` if there was an error) and `reason` (holds the reason for failure – such as `mailnotsent`, `honeypot`, `required`, `timestamp` and `notspecified`). So we may check for this return values and generate corresponding error- or success-messages for the user.
 
-The second method `processForm()` does **not** send the mail directly – it just validates / sanitizes and returns an array of sanitized fields. Using this method we are able to modify the content of the mail to be sent – e.g. merging the input for _Name_ and _First name_ into before handing the data over to the mail sending method `sendEmail()`.
-
-In the following example I didn't merge any fields – I just take the sanitized return value (array of sanitized fields & values, with human readable labels) and hand it over to the `sendEmail()` method. In this example you can also see how we handle validation errors:
+Here is an example, including a check for possible problems:
 
 ```php
-$processResult = $fp->processForm();
+// OPTIONAL: If the $wire object is not available in your file, include PWs index
+//require_once '../../index.php';
+
+// load class and instanciate
+require_once 'classes/class.pwformprocessor.php';
+$fp = new PwFormprocessor($wire);
+
+// define mail sender and receiver
+$fp->setMailReceiver('info@example.com');
+$fp->setMailSender('info@example.com');
+$fp->setMailSenderName('John Doe');
+$fp->setMailSubject('My Mail Subject');
+
+// set the field to be used as replyTo mail header (available since v0.5)
+$fp->setMailReplyToField('email');
+
+// define honeypot fields (form won't send if populated)
+$fp->setHoneypotFields(array('confirm_email'));
+
+// set timestamp field (optional for spam protection, a hidden field wich contains a unix timestamp)
+$fp->setTimestampfield('stamp');
+$fp->setTimestampduration(172800) // =2 days, default is 86400 =  1 day (set it with PW Caching duration in mind)
+
+$fp->setFields(array(
+
+    'name' => array(
+        'label'=> 'Name',
+        'sanitizer' => 'text',
+        'required' => true,
+        'fallback' => false,
+        'errortext' => 'Please enter a name',
+    ),
+    'customfield--demo' => array(
+        'label'=> 'Customfield Demo',
+        'value' => 'This ia custom field which may contain <strong>HTML</strong>',
+        'htmloptions' => 'fullwidth nohtmlentities'
+    ),
+    'firstname' => array(
+        'label'=> 'First Name',
+        'sanitizer' => 'text',
+        'required' => false,
+        'fallback' => 'not provided'
+    ),
+    'email' => array(
+        'label'=> 'E-Mail',
+        'sanitizer' => 'email',
+        'required' => true,
+        'fallback' => false
+        'errortext' => 'Please provide a email adress',
+    ),
+    'message' => array(
+        'label'=> 'Message',
+        'sanitizer' => 'textarea',
+        'required' => false,
+        'fallback' => false,
+        'htmloptions' => 'nl2br fullwidth'
+    ),
+));
+
+$processResult = $fp->processFormAndSend();
 if(array_key_exists('success',$processResult) AND $processResult['success'] == true){
-    // at this point we could merge some fields (stored in $processResult['sanitizedfields']) for the html generation
-    // but for now we just pass the method the sanitized fields (wich contains labels and values)
-    if($fp->sendEmail($processResult['sanitizedfields'])){
-        echo "Your message was successfully submitted";
-        exit;
-    } else {
-        echo "Your message could not be delivered. Please contact us by phone.";
-        exit;
-    }
+    echo "Your message was successfully submitted.";
+    exit;
 } elseif(array_key_exists('reason',$processResult)){
+    http_response_code(400);
     switch ($processResult['reason']) {
         case "honeypot":
-            http_response_code(400);
-            echo "Suspected spam A";
+            echo "Submission failed due to suspected spam (ERRO S1)";
             break;
+
         case "timestamp":
-            http_response_code(400);
-            echo "Suspected spam B";
+            echo "Submission failed due to suspected spam (ERROR S2)";
             break;
 
         case "required":
-            http_response_code(400);
-            echo "Please fill out all mandatory fields!";
+            echo "Please fill out all required fields:";
+            if(array_key_exists('missingfields',$processResult)){
+                foreach ($processResult['missingfields'] as $errortext){
+                    echo "<br>".$errortext;
+                }
+            }
+            break;
+
+        case "mailnotsent":
+            echo "Your mail could not be delivered because of technical reasons. Please call us. (ERROR T1)";
+            break;
+
+        case "notspecfied":
+            echo "Your mail could not be delivered because of technical reasons. Please call us. (ERROR T2)";
             break;
     }
 }
