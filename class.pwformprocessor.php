@@ -19,6 +19,7 @@ class PwFormprocessor{
     private $timestampfield = null;
     private $mulivalueseperator = " | ";
     private $missingfields = array();
+    private $customfieldprefix = 'customfield--';
 
     /**
      * PwFormprocessor constructor.
@@ -118,6 +119,16 @@ class PwFormprocessor{
     public function setMulivalueseperator(string $mulivalueseperator){
         $this->mulivalueseperator = $mulivalueseperator;
     }
+
+    /**
+     * @param string $customfieldprefix
+     */
+    public function setCustomfieldprefix(string $customfieldprefix): void
+    {
+        $this->customfieldprefix = $customfieldprefix;
+    }
+
+
 
     /**
      * @return array
@@ -250,13 +261,24 @@ class PwFormprocessor{
      */
     private function sanitizeFields(){
         foreach ($this->fields as $fieldname => $config){
+
+            // handling custom fields
+            if($this->isCustomfield($fieldname)){
+                $this->sanitizedFields[$fieldname]['value'] = $config['value'];
+                $this->sanitizedFields[$fieldname]['label'] = $config['label'];
+                if(array_key_exists('htmloptions',$config)){
+                    $this->sanitizedFields[$fieldname]['htmloptions'] = $config['htmloptions'];
+                }
+                continue;
+            }
+
+            // handling regular fields
             $value = $this->wire->input->post($fieldname);
             if(array_key_exists('sanitizer',$config) AND method_exists($this->wire->sanitizer, $config['sanitizer'])){
                 // check if the current field value is an array (multi value fields such as checkboxes and multi selects)
                 if(is_array($value)){
                     $value = implode($this->mulivalueseperator,$value);
                 }
-
                 $value = $this->wire->sanitizer->{$config['sanitizer']}($value);
             }
             // if sanitizer results in empty string, we check if we have a fallback value set
@@ -276,6 +298,17 @@ class PwFormprocessor{
                 $this->sanitizedFields[$fieldname]['htmloptions'] = $config['htmloptions'];
             }
         }
+    }
+
+    /**
+     * @param $fieldname
+     * @return bool
+     */
+    private function isCustomfield($fieldname){
+        if(str_starts_with($fieldname, $this->customfieldprefix)){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -331,7 +364,7 @@ class PwFormprocessor{
         if(array_key_exists('label',$data) AND $data['label'] AND $value!=""){
 
             // check if we have 'fullwidth' set in 'htmloptions'
-            if(array_key_exists('htmloptions',$data) AND strpos($data['htmloptions'],'fullwidth')){
+            if(array_key_exists('htmloptions',$data) AND str_contains($data['htmloptions'],'fullwidth')){
                 $row = "<tr>\n
                                 <td colspan='2'>
                                 <strong>".htmlentities($data['label'])."</strong><br><br>
@@ -405,7 +438,13 @@ class PwFormprocessor{
             // only add data which has a label defined
             if(array_key_exists('label',$data) AND $data['label']){
                 $message.=$data['label'].":\n";
-                $message.=$data['value']."\n";
+
+                // if it is a custom field it may contain HTML markup, so we convert it to text
+                if($this->isCustomfield($field)){
+                    $message.=$this->wire->sanitizer->markupToText($data['value'])."\n";
+                } else {
+                    $message.=$data['value']."\n";
+                }
                 $message.="--------------------------------------------------------------------------------\n";
             }
         }
