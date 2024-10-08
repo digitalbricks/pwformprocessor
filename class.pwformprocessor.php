@@ -4,7 +4,7 @@
  * Class PwFormprocessor
  */
 class PwFormprocessor{
-    public $version = "0.5";
+    public $version = "0.6";
     private $wire = null;
     private $fields = null;
     private $sanitizedFields = null;
@@ -68,9 +68,9 @@ class PwFormprocessor{
     }
 
     /**
-     * @param string $receiver
+     * @param string|array $receiver single receiver or an array of receivers
      */
-    public function setMailReceiver(string $receiver){
+    public function setMailReceiver(string|array $receiver){
         $this->mailreceiver = $receiver;
     }
 
@@ -504,7 +504,14 @@ class PwFormprocessor{
         $m = $this->wire->mail->new();
 
         // set data
-        $m->to($this->mailreceiver);
+        // -- single receiver or multiple receivers
+        if(is_array($this->mailreceiver)){
+            foreach ($this->mailreceiver as $receiver){
+                $m->to($receiver);
+            }
+        } else {
+            $m->to($this->mailreceiver);
+        }
         $m->subject($this->mailsubject);
         $m->bodyHTML($html);
         $m->body($text);
