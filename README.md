@@ -112,7 +112,7 @@ require_once 'classes/class.pwformprocessor.php';
 $fp = new PwFormprocessor($wire);
 
 // define mail sender and receiver
-$fp->setMailReceiver('info@example.com');
+$fp->setMailReceiver('info@example.com'); // single email address or array of multiple addresses
 $fp->setMailSender('info@example.com');
 $fp->setMailSenderName('John Doe');
 $fp->setMailSubject('My Mail Subject');
