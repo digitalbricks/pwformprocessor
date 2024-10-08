@@ -23,7 +23,7 @@ After that, we can set some basic option for the email, such as sender, receiver
 
 ```php
 // define mail sender and receiver
-$fp->setMailReceiver('info@example.com');
+$fp->setMailReceiver('info@example.com'); // single email address or array of multiple addresses
 $fp->setMailSender('info@example.com');
 $fp->setMailSenderName('John Doe');
 $fp->setMailSubject('My Mail Subject');
