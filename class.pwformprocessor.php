@@ -8,7 +8,7 @@ class PwFormprocessor{
     private $wire = null;
     private $fields = null;
     private $sanitizedFields = null;
-    private $honeypotfields = null;
+    private $honeypotfields = array();
     private $mailreceiver = null; // specify CSV string or array for multiple addresses
     private $mailsender = null;
     private $mailreplyto = null;
