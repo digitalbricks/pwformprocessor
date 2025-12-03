@@ -36,12 +36,12 @@ Now we can define the our fields:
 
 ```php
 // define honeypot fields (form won't send if populated)
-$fp->setHoneypotFields(array('name','email','subject', 'message'));
+$fp->setHoneypotFields(array('name2','email_repeat','subject'));
 
 // set fields
 $fp->setFields(array(
     'amount' => array(
-        'label'=> 'Amount',     // human readable label, will be used for email output (no laben = no output in email)
+        'label'=> 'Amount',     // human readable label, will be used for email output (no label = no output in email)
         'sanitizer' => 'int',   // name of the sanitizer method, see https://processwire.com/api/ref/sanitizer/
         'required' => true,     // true if this is a mandatory field
         'fallback' => 0,        // a fallback value if field is empty (only usefull for 
